@@ -70,6 +70,52 @@ instructions. The agent answers with a URL, whether it thinks no official source
 next to their answers, so an agent that reads it is looking the answer up rather than researching it. The reward
 scores those answers as wrong. `data/blocked_domains.txt` lists the domains to block.
 
+## Run it on a model
+
+The quickest way is to use Claude Code or Codex, on the plan you are already signed in to. You need no API key and
+no other setup. From the top of the repository, after the quick start, run one of these.
+
+```
+.venv/bin/techieray-lab find-primary-source run --agent claude     # Claude Code, on your Claude plan
+.venv/bin/techieray-lab find-primary-source run --agent codex      # Codex, on your ChatGPT plan
+```
+
+Then score the run with the command it prints, for example
+`.venv/bin/techieray-lab find-primary-source score --rollouts runs/claude-default-default/rollouts.jsonl`.
+
+| Option | What it does |
+|---|---|
+| `--model`, `--effort` | Choose the agent's model and reasoning effort. By default the agent uses its own defaults. |
+| `--limit 3` | Run only the first three tasks, to try it out |
+| `--rollouts 4` | Run each task four times |
+| `--form input_named` | Ask the easier form of each question (see Files below) |
+| `--workers` | How many tasks run at once. The default is 2, which suits a plan's usage limits. |
+
+**Three rules, which the runner applies for you.**
+
+1. **The agent never sees this repository.** `tasks.jsonl` holds the answer key next to each question. Each task
+   runs in a new, empty temporary folder, and the agent gets only the question.
+2. **The agent gets only web tools.** Claude Code gets web search and web fetch. Codex gets web search. Neither gets
+   a shell, files, MCP servers, plugins, skills, hooks or your own settings. Claude Code is blocked from opening
+   `techieray.com`.
+3. **A rollout that saw `techieray.com` is not scored.** Neither agent can keep the site out of its search results,
+   so every transcript is checked for it. A rollout that shows it is marked `blocked_domain_seen`, and `score` drops
+   it. Full transcripts are kept in `transcripts/`, next to the rollouts file.
+
+**What the results measure.** A run measures the model inside Claude Code or Codex, including that agent's own
+instructions, tools and limits. It does not measure the bare model. Report results as, for example, "Claude Code
+2.1, Opus 5.5, high effort", not as a score for the model alone. Each rollout records the agent, its version, the
+model and the effort. Codex does not report its model, so pass `--model` if you want it recorded.
+
+**Usage limits.** A plan has usage limits. A task that fails is not saved, and after three failures in a row the run
+stops. Run the same command again once your limit resets, and it continues from where it stopped.
+
+**Using your own setup instead.** Use the question exactly as `question()` in
+`src/techieray_training_lab/regulatory_research/find_primary_source/agents.py` writes it, with `data/task_prompt.txt`
+as the instructions, and follow the three rules above. Write one JSON line per answer with `example_id`, `url`,
+`no_official_source` and `confidence`, and optionally `rollout_id` and `blocked_domain_seen`. Then run `score` on
+that file.
+
 ## For engineers
 
 ### Calling the reward

@@ -51,6 +51,10 @@ The find primary source set has an optional Claude grader. To use it, install th
 Each set has its own module, `techieray_training_lab.<domain>.<set>`, with a function to load its tasks and a way
 to score an output. Its README explains the tasks, how outputs are scored and any extra rules.
 
+To run a set on a model, use the `techieray-lab` command. For example,
+`techieray-lab find-primary-source run --agent claude` runs Claude Code on your Claude plan, and `--agent codex` runs
+Codex on your ChatGPT plan. The set's README explains the rules the runner applies and how to report results.
+
 ### Example from the find primary source set
 
 The agent gets a short news alert, a jurisdiction and a date.
