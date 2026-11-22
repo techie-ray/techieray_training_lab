@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "techieray-training-lab"
 version = "0.3.1"
-description = "Training sets for AI and technology law, built to be used as reinforcement learning environments"
+description = "Training and evaluation sets for AI and technology law, built to be used as reinforcement learning environments"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT (code); see each set for its data licence"}

@@ -1,6 +1,6 @@
 # techieray training lab
 
-**Training sets for AI and technology law, built to be used as reinforcement learning environments.**
+**Training and evaluation sets for AI and technology law, built to be used as reinforcement learning environments.**
 
 techieray training lab provides training sets for AI and technology law use cases, such as regulatory research,
 contract negotiation, compliance analysis, and policy and governance work. Each training set gives an AI system tasks
