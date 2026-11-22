@@ -50,8 +50,46 @@ is meant before it can find it.
 
 ## How good are current models?
 
-We have not yet published results for current models on these tasks. When we do, they will appear here with the code
-used to run them.
+These are the first published results. Two models did the 50 tasks on 22 November 2026. Fable 5.2 ran in Claude Code,
+and GPT 6.2 Astra ran in Codex.
+
+Each agent did each task one time. The runs did not set an effort. Thus each agent used its default effort. The reward
+function scored the answers with the answer key only.
+
+| Agent, model and effort | Tasks solved | Mean reward | Penalised answers | No-source tasks recognised |
+|---|---|---|---|---|
+| Claude Code 2.1.323, Fable 5.2, default effort | 40 of 50 (80%) | 0.755 | 1 | 0 of 5 |
+| Codex CLI 0.171.0, GPT 6.2 Astra, default effort | 37 of 50 (74%) | 0.711 | 3 | 2 of 5 |
+
+The difference is too small to show which model is better. The 95% confidence intervals for the tasks solved are 67% to
+89% and 60% to 84%. These intervals overlap. A paired test (exact McNemar test) gives p = 0.51. This difference is not
+significant.
+
+<img src="results/fable-5.2-vs-gpt-6.2-astra_default-effort_2026-11-22.png" width="560" alt="Bar chart of the tasks solved. Fable 5.2 in Claude Code solved 40 of 50 tasks (80%). GPT 6.2 Astra in Codex solved 37 of 50 tasks (74%). The 95% confidence intervals overlap.">
+
+**Four limits apply to these results.**
+
+1. **Each agent did one run only.** There are 50 tasks, and each agent did each task one time. Thus a difference of
+   three tasks can occur by chance.
+2. **The default effort is not the same in the two agents.** The model list of each agent gives the default effort. The
+   default effort is low in Codex for GPT 6.2 Astra. It is medium in Claude Code for Fable 5.2.
+3. **The reward function used the answer key only.** An official page that is not in the answer key scores 0. Fable 5.2
+   gave 5 of these answers, and GPT 6.2 Astra gave 8. No person has examined these pages.
+4. **One run stopped, then continued.** The GPT 6.2 Astra run stopped at a usage limit after 29 tasks. The run continued
+   later. Codex did not record the search results for the last 21 tasks. Thus the check for `techieray.com` could not
+   examine these tasks.
+
+The answers and the scores of each run are in `results/runs/`. Each run has its own folder. The folder name gives the
+agent, the model, the effort and the date. The transcripts are not in the repository.
+
+To score a run again, give its `rollouts.jsonl` file to the `score` command.
+
+```
+.venv/bin/techieray-lab find-primary-source score --rollouts sets/regulatory_research/find_primary_source/results/runs/claude-code-2.1.323_fable-5.2_default-effort_2026-11-22/rollouts.jsonl
+```
+
+The runner in [Run it on a model](#run-it-on-a-model) made these runs. The Claude Code run used
+`--model claude-fable-5-2`. The Codex run used `--model gpt-6.2-astra`.
 
 ## Quick start
 
@@ -183,6 +221,8 @@ In this folder
 | `data/blocked_domains.txt` | Domains the agent's tools must block |
 | `examples/rollouts.jsonl` | Sample agent answers for trying the scorer |
 | `results/reward_checks.json` | What each shortcut strategy earns on these tasks |
+| `results/runs/` | The answers and scores of the published runs, one folder per run |
+| `results/fable-5.2-vs-gpt-6.2-astra_default-effort_2026-11-22.png` | The chart of the published runs |
 | `DATASHEET.md` | How the tasks were made, what they cover and their limits |
 | `LICENSE-DATA` | The licence for this set's data |
 
