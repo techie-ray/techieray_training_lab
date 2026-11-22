@@ -154,3 +154,47 @@ def test_nigeria_task_whose_source_was_deleted_is_replaced():
     assert item['strata']['jurisdiction'] == 'NG' and not item['strata']['strict']
     url = 'https://fmino.gov.ng/45th-national-council-charts-new-course-for-a-future-ready-credible-and-efficient-civil-service/'
     assert find_primary_source_reward(item, {'url': url, 'confidence': 'verified'}).reward == 1.0
+
+
+def test_official_answers_from_the_v0_3_0_baselines_are_accepted():
+    # each opened and confirmed on 22 November 2026 (Claude Code and Codex baselines on v0.3.0)
+    found = {
+        '7307095c7864': 'https://www.boletinoficial.gob.ar/detalleAviso/primera/311381/202407290',
+        '44317a47ecb0': 'https://legislation.nysenate.gov/pdf/bills/2023/s7543b',
+        'afbdf3b43b52': 'https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_M2M6U0V7T0U8S1T2R3Z4A0Y6Z9X5X3',
+        '87e420c1be48': 'https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=2461452&filename=Avulso+PL+2807%2F2024',
+        '86b041549175': 'https://data.consilium.europa.eu/doc/document/ST-15148-2026-INIT/en/pdf',
+        'd0e75ad2509f': 'https://www.mofa.gov.ae/en/mediahub/news/2025/11/18/18-11-2025-uae-korea',
+        '609f322c21d9': 'https://presidency.gov.za/president-appoints-commission-fourth-industrial-revolution',
+        '7b04673ccece': 'https://www.mofa.go.jp/files/100990649.pdf',
+        'bce5eeb3104c': 'https://hansard.parliament.uk/Lords/2025-05-12/debates/45252051-8C6C-4193-A53D-AC083E777D08/DataUseAndAccessBillHl',
+        '19872e77eb80': 'https://ised-isde.canada.ca/site/ised/en/node/679',
+        '3979ac328815': 'https://planalto.gov.br/ccivil_03/projetos/ato_2023_2026/2025/pl/pl-6237.htm',
+        '741577743871': 'https://iga.in.gov/legislative/2024/bills/house/1047',
+        'c580acab1c8f': 'https://www.resmigazete.gov.tr/eskiler/2025/12/20251225-13.pdf',   # Decree 192: the AI directorate
+        'fc52044ee88e': 'https://ncc.gov.ng/sites/default/files/2026-02/Internet-Code-of-Practice-2026.pdf',
+    }
+    for suffix, url in found.items():
+        assert find_primary_source_reward(_item(suffix), {'url': url, 'confidence': 'verified'}).reward == 1.0, suffix
+    item = _item('87e420c1be48')   # the bill as filed, too
+    url = 'https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=2452315'
+    assert find_primary_source_reward(item, {'url': url, 'confidence': 'verified'}).reward == 1.0
+    item = _item('afbdf3b43b52')   # the government legislation portal's page for the bill
+    url = 'https://community.lawmaking.go.kr/gcom/nsmLmSts/out/2220174/detailRP'
+    assert find_primary_source_reward(item, {'url': url, 'confidence': 'verified'}).reward == 1.0
+
+
+def test_wrong_answers_from_the_baselines_still_score_nothing():
+    wrong = {
+        '911c6905bb9f': 'https://www.ict.go.ke/blockchain.pdf',                             # 404
+        'd9a61b63e004': 'https://trai.gov.in/sites/default/files/Recommendation_12042024.pdf',  # 404
+        '90fc73701544': 'https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=3137291',  # another bill
+        'dce3c01bf369': 'https://www.soumu.go.jp/main_content/001097704.pdf',               # a later meeting
+        '44760fdc8744': 'https://g7.utoronto.ca/summit/2026evian/260617-digital-space.html',  # not official
+    }
+    for suffix, url in wrong.items():
+        assert not find_primary_source_reward(_item(suffix), {'url': url, 'confidence': 'likely'}).correct, suffix
+
+
+def test_el_salvador_supreme_court_legal_database_is_an_official_host():
+    assert 'jurisprudencia.gob.sv' in _item('8d91b7870f31')['reference']['authoritative_hosts']

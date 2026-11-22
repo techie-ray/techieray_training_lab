@@ -20,7 +20,7 @@ Each task with a source then went through these steps.
 2. **Every official answer was collected.** Besides the tracker's link, the key lists other official pages for the
    same development where they exist, such as the document itself, the issuing body's announcement, co-issuers'
    releases and official copies in other languages. Each page was opened and checked before it was added. Most tasks
-   with a source accept two or more pages, and one accepts ten.
+   with a source accept two or more pages, and one accepts eleven.
 3. **Laws and bills were made strict where possible.** For 19 tasks the key is the authoritative text on an official
    register, such as a legislature's bill system, an official gazette or a national legislation database. On those
    tasks an announcement about the instrument does not count. Candidate texts were found through official sources

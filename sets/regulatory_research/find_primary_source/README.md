@@ -150,13 +150,13 @@ why it scored what it did, listed in `OUTCOMES`.
 ### What counts as the right page
 
 Many tasks accept more than one page, such as the document itself, the issuing body's announcement and official
-copies in other languages. 28 of the 45 tasks with a source accept two or more. Any accepted page scores as correct,
+copies in other languages. 34 of the 45 tasks with a source accept two or more. Any accepted page scores as correct,
 except on strict tasks, where only the text does.
 
 URLs are compared after normalisation. Case, `www.`, language markers, tracking tags and known alternative addresses
 for the same document are ignored, and pages under an accepted address count. For example, a bill's text tab on
-congress.gov matches its main bill page, a California bill's text tab on leginfo matches its main bill page, and a
-CELEX link and an ELI link to the same EU act match each other.
+congress.gov matches its main bill page, a California bill's text tab on leginfo matches its main bill page, a New York
+Senate bill PDF matches its amendment page, and a CELEX link and an ELI link to the same EU act match each other.
 
 An official page that the key does not list scores 0 by default and is never penalised, because it may still be right.
 To score those pages too, pass a grader. A grader is any function that takes the task and the answer and returns

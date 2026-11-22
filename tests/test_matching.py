@@ -101,3 +101,27 @@ def test_camara_file_name_is_cosmetic():
     assert not url_matches('https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=3104780', frag)
     # only on the Câmara: elsewhere a file name can name the document
     assert not url_matches('https://x.gov/download?filename=b.pdf', 'x.gov/download?filename=a.pdf')
+
+
+def test_boletin_oficial_notices_are_identified_by_number():
+    frag = 'boletinoficial.gob.ar/detalleAviso/primera/311381/20240729'
+    assert url_matches('https://www.boletinoficial.gob.ar/detalleAviso/primera/311381/202407290', frag)
+    assert url_matches('https://www.boletinoficial.gob.ar/detalleAviso/primera/311381', frag)
+    assert not url_matches('https://www.boletinoficial.gob.ar/detalleAviso/primera/311382/20240729', frag)
+    assert not url_matches('https://www.boletinoficial.gob.ar/detalleAviso/segunda/311381/20240729', frag)
+
+
+def test_new_york_senate_bill_pdf_is_that_amendment():
+    frag = 'nysenate.gov/legislation/bills/2023/S7543/amendment/B'
+    assert url_matches('https://legislation.nysenate.gov/pdf/bills/2023/s7543b', frag)
+    assert not url_matches('https://legislation.nysenate.gov/pdf/bills/2023/s7543a', frag)
+    assert not url_matches('https://legislation.nysenate.gov/pdf/bills/2023/s7543', frag)
+    assert url_matches('https://legislation.nysenate.gov/pdf/bills/2023/s7543',
+                       'nysenate.gov/legislation/bills/2023/S7543/amendment/original')
+
+
+def test_korean_assembly_bill_pages_are_one_bill():
+    frag = 'likms.assembly.go.kr/bill/bi/billDetailPage.do?billId=PRC_M2M6U0V7T0U8S1T2R3Z4A0Y6Z9X5X3'
+    assert url_matches('https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_M2M6U0V7T0U8S1T2R3Z4A0Y6Z9X5X3', frag)
+    assert url_matches('https://likms.assembly.go.kr/bill/bi/billDetailPage.do?billId=PRC_M2M6U0V7T0U8S1T2R3Z4A0Y6Z9X5X3&currMenuNo=2600044', frag)
+    assert not url_matches('https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_OTHER', frag)

@@ -14,7 +14,11 @@ Both the answer URL and each accepted fragment are first reduced to a canonical 
     Register notice reduces to its document number, on federalregister.gov or govinfo.gov. A Swiss federal news item
     reduces to its ID, on any admin.ch site. An EU act on EUR-Lex reduces to its ELI, whether addressed by CELEX
     number (`legal-content/EN/TXT/?uri=CELEX:32024R1689`) or ELI (`eli/reg/2024/1689/oj`). A California bill's text,
-    status, history and versions tabs on leginfo reduce to its main page (`billNavClient.xhtml?bill_id=...`).
+    status, history and versions tabs on leginfo reduce to its main page (`billNavClient.xhtml?bill_id=...`). A New
+    York Senate bill PDF (`legislation.nysenate.gov/pdf/bills/2023/s7543b`) reduces to that amendment's page
+    (`nysenate.gov/legislation/bills/2023/s7543/amendment/b`; no letter is `/amendment/original`). A Korean National
+    Assembly bill reduces to its `billDetailPage.do?billId=...` page. An Argentine Boletín Oficial notice reduces to its
+    section and number (`detalleAviso/primera/311381`): the date after it is not needed to find the notice.
 
 A fragment then matches when the canonical URL starts with it and the next character is end-of-URL, '/', '?' or '#'.
 So `congress.gov/bill/119th-congress/house-bill/45` matches `.../house-bill/45` and `.../house-bill/45/text` but not
@@ -77,6 +81,14 @@ _EU_KINDS = {'r': 'reg', 'l': 'dir', 'd': 'dec'}
 # a California bill's tabs on leginfo, by bill_id (202520260ab723); its votes and committee analyses are other pages
 _LEGINFO_CA_BILL = re.compile(r'^leginfo\.legislature\.ca\.gov/faces/bill(?:nav|text|status|history|versions)client\.xhtml'
                               r'\?(?:[^#]*&)?bill_id=([0-9a-z]+)(?=$|&)')
+# a New York Senate or Assembly bill PDF, by amendment letter (s7543b); its page is .../s7543/amendment/b
+_NYSENATE_PDF = re.compile(r'^legislation\.nysenate\.gov/pdf/bills/(\d{4})/([as]\d+)([a-z]?)(?=$|[/?#.])')
+# a Korean National Assembly bill, by billId, on its detail page or the older address that redirects there. The
+# detail page lives under /bill/bi/, and 'bi' is also a language code (Bislama), so it is gone by the time this runs.
+_LIKMS_BILL = re.compile(r'^likms\.assembly\.go\.kr/bill/(?:bi/)?(?:billdetailpage|billdetail)\.do\?(?:[^#]*&)?'
+                         r'billid=([0-9a-z_]+)(?=$|&)')
+# an Argentine Boletín Oficial notice, by section and number; the date that follows is optional and not checked
+_BOLETIN_AR = re.compile(r'^boletinoficial\.gob\.ar/detalleaviso/([a-z]+)/(\d+)(?=$|[/?#])')
 _GOVINFO_BILL = re.compile(r'^govinfo\.gov/(?:content/pkg|app/details)/bills-(\d+)([a-z]+?)(\d+)[a-z]*(?=$|[/?#.-])')
 
 
@@ -107,6 +119,15 @@ def _known_families(u: str) -> str:
     m = _LEGINFO_CA_BILL.match(u)
     if m:  # every tab of one California bill reduces to its main bill page
         return f'leginfo.legislature.ca.gov/faces/billnavclient.xhtml?bill_id={m[1]}'
+    m = _NYSENATE_PDF.match(u)
+    if m:  # a New York bill PDF is the text of one amendment
+        return f'nysenate.gov/legislation/bills/{m[1]}/{m[2]}/amendment/{m[3] or "original"}'
+    m = _LIKMS_BILL.match(u)
+    if m:
+        return f'likms.assembly.go.kr/bill/billdetailpage.do?billid={m[1]}'
+    m = _BOLETIN_AR.match(u)
+    if m:
+        return f'boletinoficial.gob.ar/detalleaviso/{m[1]}/{m[2]}'
     m = _CONGRESS_PAGE.match(u)
     if m:
         return f'congress.gov/bill/{_ordinal(int(m[1]))}-congress/{m[2]}/{int(m[3])}'
