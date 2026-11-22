@@ -80,3 +80,24 @@ def test_tracking_parameters_are_ignored_but_real_ones_kept():
     real = 'ec.europa.eu/transparency/documents-register/detail?ref=COM(2025)265&lang=en'
     assert not url_matches('https://ec.europa.eu/transparency/documents-register/detail?ref=COM(2025)266', real)
     assert url_matches('https://ec.europa.eu/transparency/documents-register/detail?ref=COM(2025)265', real)
+
+
+def test_california_bill_tabs_are_one_bill():
+    bill = 'leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=202520260AB723'
+    for tab in ('billTextClient', 'billStatusClient', 'billHistoryClient', 'billVersionsClient', 'billNavClient'):
+        assert url_matches(f'https://leginfo.legislature.ca.gov/faces/{tab}.xhtml?bill_id=202520260AB723', bill), tab
+    assert url_matches('https://leginfo.legislature.ca.gov/faces/billTextClient.xhtml?search_keywords=x&bill_id=202520260AB723', bill)
+    # another bill, or a page that is not the bill (votes, committee analyses), is not the same page
+    assert not url_matches('https://leginfo.legislature.ca.gov/faces/billTextClient.xhtml?bill_id=202520260AB7230', bill)
+    assert not url_matches('https://leginfo.legislature.ca.gov/faces/billTextClient.xhtml?bill_id=202520260AB724', bill)
+    assert not url_matches('https://leginfo.legislature.ca.gov/faces/billVotesClient.xhtml?bill_id=202520260AB723', bill)
+    assert not url_matches('https://leginfo.legislature.ca.gov/faces/billAnalysisClient.xhtml?bill_id=202520260AB723', bill)
+
+
+def test_camara_file_name_is_cosmetic():
+    frag = 'camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=3063060&filename=PL%206237/2025'
+    assert url_matches('https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=3063060', frag)
+    assert url_matches('https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=3063060&filename=Avulso+PL+6237/2025', frag)
+    assert not url_matches('https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=3104780', frag)
+    # only on the Câmara: elsewhere a file name can name the document
+    assert not url_matches('https://x.gov/download?filename=b.pdf', 'x.gov/download?filename=a.pdf')

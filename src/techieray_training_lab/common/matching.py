@@ -6,13 +6,15 @@ Both the answer URL and each accepted fragment are first reduced to a canonical 
     (`hansard.parliament.uk/Commons/...` and `.../commons/...` are the same page);
   - language markers removed: a path segment that is a language code (`/en/`, `/ms/`, `/zh-cn/`) and query
     parameters such as `lang=` or `hl=`, so the English and Malay versions of one release match;
-  - tracking parameters removed (`utm_*`, `fbclid`, `gclid`, `mc_cid`..., and `ref=`/`source=` whose value is a domain);
+  - tracking parameters removed (`utm_*`, `fbclid`, `gclid`, `mc_cid`..., and `ref=`/`source=` whose value is a domain),
+    and parameters that only name the download on one site (`filename=` on camara.leg.br);
   - known address families for one document reduced to one form. Today that is US federal bills: every congress.gov
     bill tab (`/text`, `/all-info`), the congress.gov text file (`/118/bills/s9876/BILLS-118s9876is.htm`) and the
     govinfo package for the bill all reduce to `congress.gov/bill/118th-congress/senate-bill/9876`. A US Federal
     Register notice reduces to its document number, on federalregister.gov or govinfo.gov. A Swiss federal news item
     reduces to its ID, on any admin.ch site. An EU act on EUR-Lex reduces to its ELI, whether addressed by CELEX
-    number (`legal-content/EN/TXT/?uri=CELEX:32024R1689`) or ELI (`eli/reg/2024/1689/oj`).
+    number (`legal-content/EN/TXT/?uri=CELEX:32024R1689`) or ELI (`eli/reg/2024/1689/oj`). A California bill's text,
+    status, history and versions tabs on leginfo reduce to its main page (`billNavClient.xhtml?bill_id=...`).
 
 A fragment then matches when the canonical URL starts with it and the next character is end-of-URL, '/', '?' or '#'.
 So `congress.gov/bill/119th-congress/house-bill/45` matches `.../house-bill/45` and `.../house-bill/45/text` but not
@@ -45,8 +47,15 @@ _TRACKING = re.compile(r'^(utm_\w+|fbclid|gclid|dclid|msclkid|mc_cid|mc_eid|_hs\
 _DOMAIN_VALUE = re.compile(r'^[a-z0-9-]+(\.[a-z0-9-]+)+$')
 
 
-def _keep_param(k, v):
+# parameters that only name the download on one site, never which document it is: the Câmara's file viewer serves
+# one document per codteor, whatever filename= says (codteor=3063060&filename=PL%206237/2025)
+_COSMETIC_PARAMS = {'camara.leg.br': {'filename'}}
+
+
+def _keep_param(k, v, host=''):
     if k in _LANG_PARAMS or _TRACKING.match(k):
+        return False
+    if any(k in names for site, names in _COSMETIC_PARAMS.items() if host == site or host.endswith('.' + site)):
         return False
     return not (k in ('ref', 'source') and _DOMAIN_VALUE.match(v))
 
@@ -65,6 +74,9 @@ _EURLEX_CELEX = re.compile(r'^eur-lex\.europa\.eu/legal-content/(?:txt|all|auto)
                            r'uri=celex(?:%3[aA]|:)3(\d{4})([rld])(\d{4})(?![0-9a-z(%])')
 _EURLEX_ELI = re.compile(r'^eur-lex\.europa\.eu/eli/(reg|dir|dec)/(\d{4})/(\d+)(?=$|[/?#])')
 _EU_KINDS = {'r': 'reg', 'l': 'dir', 'd': 'dec'}
+# a California bill's tabs on leginfo, by bill_id (202520260ab723); its votes and committee analyses are other pages
+_LEGINFO_CA_BILL = re.compile(r'^leginfo\.legislature\.ca\.gov/faces/bill(?:nav|text|status|history|versions)client\.xhtml'
+                              r'\?(?:[^#]*&)?bill_id=([0-9a-z]+)(?=$|&)')
 _GOVINFO_BILL = re.compile(r'^govinfo\.gov/(?:content/pkg|app/details)/bills-(\d+)([a-z]+?)(\d+)[a-z]*(?=$|[/?#.-])')
 
 
@@ -92,6 +104,9 @@ def _known_families(u: str) -> str:
     m = _EURLEX_ELI.match(u)
     if m:
         return f'eur-lex.europa.eu/eli/{m[1]}/{m[2]}/{int(m[3])}'
+    m = _LEGINFO_CA_BILL.match(u)
+    if m:  # every tab of one California bill reduces to its main bill page
+        return f'leginfo.legislature.ca.gov/faces/billnavclient.xhtml?bill_id={m[1]}'
     m = _CONGRESS_PAGE.match(u)
     if m:
         return f'congress.gov/bill/{_ordinal(int(m[1]))}-congress/{m[2]}/{int(m[3])}'
@@ -124,7 +139,7 @@ def canonical(url: str) -> str:
     segments = [s for s in rest.split('/') if s and not _is_language(s)]
     path = '/'.join([host.rstrip('.')] + segments)
     # fragments drop a trailing '/', which can belong to the last query value (contextPath=/viewer/)
-    params = [(k, v.rstrip('/')) for k, v in parse_qsl(query, keep_blank_values=True) if _keep_param(k, v)]
+    params = [(k, v.rstrip('/')) for k, v in parse_qsl(query, keep_blank_values=True) if _keep_param(k, v, host)]
     u = path + ('?' + urlencode(params) if params else '')
     return _known_families(u)
 

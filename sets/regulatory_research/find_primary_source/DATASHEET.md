@@ -19,9 +19,9 @@ Each task with a source then went through these steps.
 1. **The answer key was checked.** The editor confirmed that the key is the official source for the development.
 2. **Every official answer was collected.** Besides the tracker's link, the key lists other official pages for the
    same development where they exist, such as the document itself, the issuing body's announcement, co-issuers'
-   releases and official copies in other languages. Each page was opened and checked before it was added. Nearly half the
-   tasks with a source accept two or more pages, and one accepts eight.
-3. **Laws and bills were made strict where possible.** For 18 tasks the key is the authoritative text on an official
+   releases and official copies in other languages. Each page was opened and checked before it was added. Most tasks
+   with a source accept two or more pages, and one accepts ten.
+3. **Laws and bills were made strict where possible.** For 19 tasks the key is the authoritative text on an official
    register, such as a legislature's bill system, an official gazette or a national legislation database. On those
    tasks an announcement about the instrument does not count. Candidate texts were found through official sources
    such as govinfo, the Federal Register, EUR-Lex records and parliamentary bill systems, then confirmed.
@@ -56,9 +56,9 @@ about 15%.
 | Binding law | 12 |
 | Bill | 9 |
 | Agreement | 6 |
-| Declaration | 5 |
+| Declaration | 6 |
 | Strategy | 5 |
-| Guidance | 4 |
+| Guidance | 3 |
 | Enforcement action | 3 |
 | Other | 3 |
 | Executive order | 2 |
@@ -68,10 +68,10 @@ about 15%.
 3, human rights 3, consumer 2, intellectual property 2, trade 2, health 1, competition 1. The types and areas of the
 no-source tasks are those of the real development each was made from.
 
-**Answer pages** For the 45 tasks with a source, the main answer is HTML for 38 and PDF for 7. 14 are in a language
-other than English, among them Portuguese, Spanish, Chinese, Korean, Turkish, Arabic and Italian.
+**Answer pages** For the 45 tasks with a source, the main answer is HTML for 37 and PDF for 8. 15 are in a language
+other than English, among them Portuguese, Spanish, Chinese, Korean, Turkish, Hebrew, Arabic and Italian.
 
-**Dates** The developments run from March 2024 to October 2026. 13 tasks have no date, because the tracker records
+**Dates** The developments run from March 2024 to November 2026. 13 tasks have no date, because the tracker records
 some laws as standing entries rather than dated news.
 
 ## Fields

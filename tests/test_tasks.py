@@ -73,3 +73,84 @@ def test_load_tasks_and_cli(capsys):
     assert main(['score', '--rollouts', str(SET / 'examples' / 'rollouts.jsonl')]) == 0
     assert json.loads(capsys.readouterr().out)['rollouts'] == 6
     assert main(['check']) == 0
+
+
+def test_task_prompt_puts_the_instrument_before_its_announcement():
+    # strict tasks score only the text, so the prompt must never present an announcement as an equal answer
+    prompt = (SET / 'data' / 'task_prompt.txt').read_text()
+    assert 'whenever its text is published online' in prompt
+    assert prompt.index('the instrument itself') < prompt.index('announcement')
+
+
+def test_indiana_enrolled_act_pdf_is_accepted():
+    item = next(t for t in TASKS if t['example_id'].endswith('741577743871'))
+    url = 'https://iga.in.gov/pdf-documents/123/2024/house/bills/HB1047/HB1047.06.ENRS.pdf'
+    assert find_primary_source_reward(item, {'url': url, 'confidence': 'verified'}).reward == 1.0
+    # the introduced bill sits in the same folder and is an earlier version, so it is not accepted
+    intro = 'https://iga.in.gov/pdf-documents/123/2024/house/bills/HB1047/HB1047.01.INTR.pdf'
+    assert find_primary_source_reward(item, {'url': intro, 'confidence': 'verified'}).outcome == 'unlisted'
+
+
+def _item(suffix):
+    return next(t for t in TASKS if t['example_id'].endswith(suffix))
+
+
+def test_israel_bots_task_is_strict_on_the_draft_law():
+    item = _item('df4888af5bd0')
+    memo = ('https://www.tazkirim.gov.il/s/legislativeworkactivity/a133Y00000K4M9uQAF/%D7%94%D7%A4%D7%A6%D7%94-'
+            '%D7%9C%D7%94%D7%A2%D7%A8%D7%95%D7%AA-%D7%A6%D7%99%D7%91%D7%95%D7%A8?language=iw')
+    assert find_primary_source_reward(item, {'url': memo, 'confidence': 'verified'}).reward == 1.0
+    # the ministries' release, at its old address or where that now redirects, is the announcement, not the text
+    for url in ('https://www.gov.il/he/pages/15062022_1', 'https://www.gov.il/en/departments/news/15062022_1'):
+        assert find_primary_source_reward(item, {'url': url, 'confidence': 'likely'}).outcome == 'announcement_only', url
+
+
+def test_kenya_report_in_the_communications_authority_repository_is_accepted():
+    url = 'https://repository.ca.go.ke/items/aa797b83-9f3f-49a7-9305-c5288f0fba8f'
+    item = _item('911c6905bb9f')
+    assert find_primary_source_reward(item, {'url': url, 'confidence': 'verified'}).reward == 1.0
+    assert item['reference']['canonical_url'] == url
+
+
+def test_brazil_bill_as_first_printed_is_accepted():
+    # the Câmara's certified first printing (avulso) of PL 6.237/2025: same text, with the referral order
+    url = 'https://www.camara.leg.br/proposicoesWeb/prop_mostrarintegra?codteor=3104780&filename=Avulso+PL+6237/2025'
+    assert find_primary_source_reward(_item('3979ac328815'), {'url': url, 'confidence': 'verified'}).reward == 1.0
+
+
+def test_australian_speech_at_its_moved_address_is_accepted():
+    url = 'https://www.minister.industry.gov.au/charlton/media/speech-australian-business-economists-conference'
+    assert find_primary_source_reward(_item('494dde36c08d'), {'url': url, 'confidence': 'verified'}).reward == 1.0
+
+
+def test_where_key_pages_now_redirect_is_accepted():
+    # checked 2026-11-22: these key addresses now redirect (node ids to named pages, the Câmara's bill page to its
+    # tracking sheet), or name the page their old address now carries as canonical
+    moved = {
+        '19872e77eb80': ['https://ised-isde.canada.ca/site/isde/fr/declaration-ministres-lindustrie-numerique-technologie-g7-2025',
+                         'https://ised-isde.canada.ca/site/ised/en/g7-industry-digital-and-technology-ministers-meeting-2025'],
+        '7b04673ccece': ['https://www.pm.gc.ca/en/news/backgrounders/2026/03/06/canada-japan-comprehensive-strategic-roadmap',
+                         'https://www.pm.gc.ca/en/news/readouts/2026/03/06/prime-minister-carney-meets-prime-minister-japan-takaichi-sanae'],
+        '86b041549175': ['https://www.pm.gc.ca/fr/nouvelles/declarations/2026/10/30/declaration-commune-canada-et-lunion-europeenne-batissent',
+                         'https://www.eeas.europa.eu/eeas/historic-eu-canada-summit-builds-alliance-future_en'],
+        '90fc73701544': ['https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2430325&fichaAmigavel=nao'],
+    }
+    for suffix, urls in moved.items():
+        for url in urls:
+            assert find_primary_source_reward(_item(suffix), {'url': url, 'confidence': 'verified'}).reward == 1.0, url
+
+
+def test_canonical_urls_point_at_live_pages():
+    # the old canonical addresses 404 (TRAI's press release, MDDI's old path) or only load with www. (CBN)
+    assert _item('d9a61b63e004')['reference']['canonical_url'].endswith('/2024-09/Recommendation_12042024_0.pdf')
+    assert '/newsroom/' in _item('864db2fad3b9')['reference']['canonical_url']
+    assert _item('8240b50ff795')['reference']['canonical_url'].startswith('https://www.cbn.gov.ng/')
+
+
+def test_nigeria_task_whose_source_was_deleted_is_replaced():
+    # the NITDA speech's only official page (Voice of Nigeria) was deleted in 2026; replaced by a live Nigerian task
+    assert not any(t['example_id'].endswith('615889ba2bb2') for t in TASKS)
+    item = _item('d9c8ea6ddad1')
+    assert item['strata']['jurisdiction'] == 'NG' and not item['strata']['strict']
+    url = 'https://fmino.gov.ng/45th-national-council-charts-new-course-for-a-future-ready-credible-and-efficient-civil-service/'
+    assert find_primary_source_reward(item, {'url': url, 'confidence': 'verified'}).reward == 1.0
